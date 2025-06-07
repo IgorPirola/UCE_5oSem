@@ -1,6 +1,6 @@
 function love.conf(t)
-  t.title = "Perguntados Programação"
-  t.window.width = 480
+  t.title = "Bug ou Verdade?"
+  t.window.width = 1200
   t.window.height = 900
 
   t.modules.graphics = true

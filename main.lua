@@ -1,3 +1,5 @@
+Perguntas = require("perguntas")
+
 LG = love.graphics
 LK = love.keyboard
 
@@ -5,252 +7,481 @@ LK = love.keyboard
 local black = {0, 0, 0, 1}
 local white = {1, 1, 1, 1}
 local red = {1, 0, 0, 1}
+local green = {0, .4, 0, 1}
+local gray = {.7,.7,.7,.9}
 
--- Variaveis Globais
-MenuPrincipal = {posX=0, posY=0, canvas=nil, ativado=true, slcDif=false, canvasX=0, canvasY=0}
-BtnDificuldade = {ativado=false, txt="", width=0, height=0}
-MenuJogo = {posX=0, posY=0, canvas=nil, ativado=false, canvasX=0, canvasY=0}
+MenuPrincipal = {posX=0, posY=0, img=nil, ativado=true}
+MenuJogo = {posX=0, posY=0, img=nil, tr=nil, ativado=false, trAtivado=false, tmp=0}
+MenuVitoria = {posX=0, posY=0, img=nil, ativado=false}
+MenuInst = {posX=0, posY=0, img=nil, ativado=false}
+Botoes = {
+    Jogar = {posX=0, posY=0, img=nil, color=red, selected=false},
+    Instrucao = {posX=0, posY=0, img=nil, color=red, selected=false},
+    Sair = {posX=0, posY=0, img=nil, color=red, selected=false},
+    R1 = {posX=0, posY=0, img=nil, color=white, selected=false},
+    R2 = {posX=0, posY=0, img=nil, color=white, selected=false},
+    R3 = {posX=0, posY=0, img=nil, color=white, selected=false},
+    R4 = {posX=0, posY=0, img=nil, color=white, selected=false}
+}
+Comp = {
+    Clock = {posX=0, posY=0, img=nil, color=green},
+    ClockNum = {posX=0, posY=0, text="", seg=0},
+    pontuacao = {posX=0, posY=0},
+    tempoResposta = {posX=0, posY=0}
+}
+pontuacao = 0
+tempoResposta = 0
+imagemPerg = {
+    p1=nil
+}
+
+margem = 40
 
 function love.load()
-    Fonte = LG.newFont('src/Inter-VariableFont_opsz,wght.ttf', 22)
-    Fonte2 = LG.newFont('src/Inter-VariableFont_opsz,wght.ttf', 18)
-    MeioX = (LG.getWidth() / 2)
-    MeioY = (LG.getHeight() / 2)
-    NumPergunta = 1
+    MeioX = LG.getWidth() / 2
+    MeioY = LG.getHeight() / 2
 
-    -- Definições do Menu Principal
-    MenuPrincipal.canvasX = 380
-    MenuPrincipal.canvasY = 800
+    fonte48 = LG.newFont(48)
+    fonte48n = LG.newFont("src/Inter_18pt-Black.ttf", 48)
+    fonte32 = LG.newFont(32)
 
-    MenuPrincipal.posX = MeioX - (MenuPrincipal.canvasX / 2)
-    MenuPrincipal.posY = MeioY - (MenuPrincipal.canvasY / 2)
-
-    MenuPrincipal.canvas = LG.newCanvas(MenuPrincipal.canvasX, MenuPrincipal.canvasY)
-
-    LG.setCanvas(MenuPrincipal.canvas)
-        LG.clear(white)
-        LG.setBlendMode("alpha")
-    LG.setCanvas()
-
-    -- BtnDificuldade
-    BtnDificuldade.txt = "Selecione a dificuldade"
-    BtnDificuldade.width = Fonte2:getWidth(BtnDificuldade.txt)
-    BtnDificuldade.height = Fonte2:getHeight(BtnDificuldade.txt)
-
-    -- Definições do Menu do Jogo
-    MenuJogo.canvasX = 380
-    MenuJogo.canvasY = 700
-
-    MenuJogo.posX = MeioX - (MenuJogo.canvasX / 2)
-    MenuJogo.posY = MeioY - (MenuJogo.canvasY / 2)
-
-    MenuJogo.canvas = LG.newCanvas(MenuJogo.canvasX, MenuJogo.canvasY)
-
-    LG.setCanvas(MenuJogo.canvas)
-        LG.clear(white)
-        LG.setBlendMode("alpha")
-    LG.setCanvas()
-
-    -- Testes
-    printx = 0
-    printy = 0
-    botao = ""
-
-    -- Ilength = 0
-	-- local file = assert(io.open("src/perguntas.txt", "r"))
-	-- items = {}
-	-- for line in file:lines() do
-	-- 	Ilength = Ilength + 1
-	-- 	table.insert(items, line);
-	-- end
+    loadMenuPrinc()
+    loadMenuJogo()
+    loadMenuVitoria()
+    loadMenuInst()
 end
 
 function love.draw()
-    LG.setColor(black)
-    LG.print("" .. tostring(love.timer.getFPS()), 0,0)
-    LG.setBackgroundColor(white)
-
-    if MenuJogo.ativado then
-        -- Desenhando os elementos do menu do jogo
-        LG.setColor(.5176, .3646, .4824, 1) -- Cor do menu
-        LG.draw(MenuJogo.canvas, MenuJogo.posX, MenuJogo.posY-15)
-
-        LG.setColor(black)
-        LG.setFont(Fonte)
-        local titulo = "Pergunta " .. tostring(NumPergunta)
-        LG.print(titulo, MeioX-(Fonte:getWidth(titulo)/2), MenuJogo.posY)
-
-        -- Bloco da pergunta/imagem
-        LG.setColor(.7451, .7451, .7451, 1) -- Cinza claro
-        LG.rectangle("fill", MeioX-160, MenuJogo.posY+Fonte:getHeight(titulo)+15, 320, 450)
-
-        -- Bloco das respostas
-        LG.setColor(.6510, .6392, .6392, 1) -- Cinza mais escuro
-        LG.rectangle("fill", MeioX-160, MenuJogo.posY+Fonte:getHeight(titulo)+15+480, 150, 50) -- topo esq
-        LG.rectangle("fill", MeioX+10, MenuJogo.posY+Fonte:getHeight(titulo)+15+480, 150, 50) -- topo dir
-        LG.rectangle("fill", MeioX-160, MenuJogo.posY+Fonte:getHeight(titulo)+15+480+50+20, 150, 50) --baixo esq
-        LG.rectangle("fill", MeioX+10, MenuJogo.posY+Fonte:getHeight(titulo)+15+480+50+20, 150, 50) -- baixo dir
-    end
-
     if MenuPrincipal.ativado then
-        LG.setFont(Fonte)
-        -- Desenhando os elementos do menu principal
-        LG.setColor(.5176, .3646, .4824, 1) -- Cor do menu
-        LG.draw(MenuPrincipal.canvas, MenuPrincipal.posX, MenuPrincipal.posY-10)
-    
-        -- Textos
-        LG.setColor(black) 
-        LG.print("Estatisticas", MeioX-((Fonte:getWidth("Estatisticas"))/2), MenuPrincipal.posY)
-        LG.print("Partidas Jogadas: ", MenuPrincipal.posX+15, MenuPrincipal.posY+70)
-        LG.print("Acertos: ", MenuPrincipal.posX+15, MenuPrincipal.posY+110)
-        LG.print("Erros: ", MenuPrincipal.posX+15, MenuPrincipal.posY+150)
-    
-        -- Separador
-        LG.line(MenuPrincipal.posX+1, MenuPrincipal.posY+230, MenuPrincipal.posX+MenuPrincipal.canvasX-1, MenuPrincipal.posY+230)
-    
-        LG.print("Jogar", MeioX-((Fonte:getWidth("Jogar"))/2), MenuPrincipal.posY+245)
-        
-        if not BtnDificuldade.ativado then
-            -- Botões
-            LG.setColor(white)
-            LG.rectangle("fill", MeioX-125,MenuPrincipal.posY+400, 250, 65)
-            LG.rectangle("fill", MeioX-125,MenuPrincipal.posY+515, 250, 65)
-            LG.rectangle("fill", MeioX-125,MenuPrincipal.posY+630, 250, 65)
-    
-            -- Texto dos botões
-            LG.setFont(Fonte)
-            LG.setColor(black)
-            LG.print("Novo Jogo", MeioX-((Fonte:getWidth("Novo Jogo"))/2), MenuPrincipal.posY+400+32.5-((Fonte:getHeight("Novo Jogo"))/2))
-            LG.print("Continuar", MeioX-((Fonte:getWidth("Continuar"))/2), MenuPrincipal.posY+515+32.5-((Fonte:getHeight("Continuar"))/2))
-            LG.print("Sair", MeioX-((Fonte:getWidth("Sair"))/2), MenuPrincipal.posY+630+32.5-((Fonte:getHeight("Sair"))/2))
-        end
-    
-        -- Exibe a mensagem para selecionar uma dificuldade
-        if MenuPrincipal.slcDif then
-            LG.setColor(red)
-            LG.print("Selecione uma dificuldade", MeioX-((Fonte:getWidth("Selecione uma dificuldade"))/2), MenuPrincipal.posY+360)
-        end
-
-        -- Botão dificuldade | Dropdown
-        LG.setColor(black)
-        LG.setFont(Fonte2)
-        LG.print(BtnDificuldade.txt, MeioX-BtnDificuldade.width/2-Fonte2:getWidth(" v"), MenuPrincipal.posY+320)
-        LG.print(" v", MeioX+BtnDificuldade.width/2, MenuPrincipal.posY+320)
-        LG.line(MeioX-BtnDificuldade.width/2-Fonte2:getWidth(" v"), MenuPrincipal.posY+320+BtnDificuldade.height, MeioX+BtnDificuldade.width/2+Fonte2:getWidth(" v"), MenuPrincipal.posY+320+BtnDificuldade.height)
-        if BtnDificuldade.ativado then
-            LG.setColor(white)
-            LG.rectangle("fill", MeioX-BtnDificuldade.width/2, MenuPrincipal.posY+320+BtnDificuldade.height+5, BtnDificuldade.width, BtnDificuldade.height+95)
-            LG.setColor(black)
-    
-            LG.print("Fácil", MeioX-(Fonte2:getWidth("Fácil")/2), MenuPrincipal.posY+320+BtnDificuldade.height+15)
-            LG.line(MeioX-(Fonte2:getWidth("Fácil")/2)-20, MenuPrincipal.posY+320+BtnDificuldade.height+20+Fonte2:getHeight("Fácil")+2.5, MeioX+(Fonte2:getWidth("Fácil")/2)+20, MenuPrincipal.posY+320+BtnDificuldade.height+20+Fonte2:getHeight("Fácil")+2.5)
-    
-            LG.print("Médio", MeioX-(Fonte2:getWidth("Médio")/2), MenuPrincipal.posY+320+BtnDificuldade.height+50)
-            LG.line(MeioX-(Fonte2:getWidth("Fácil")/2)-20, MenuPrincipal.posY+320+BtnDificuldade.height+55+Fonte2:getHeight("Fácil")+2.5, MeioX+(Fonte2:getWidth("Fácil")/2)+20, MenuPrincipal.posY+320+BtnDificuldade.height+55+Fonte2:getHeight("Fácil")+2.5)
-    
-            LG.print("Difícil", MeioX-(Fonte2:getWidth("Difícil")/2), MenuPrincipal.posY+320+BtnDificuldade.height+85)
-        end
+        drawMenuPrinc()
+    elseif MenuJogo.ativado then
+        drawMenuJogo()
+    elseif MenuVitoria.ativado then
+        drawMenuVitoria()
+    elseif MenuInst.ativado then
+        drawMenuInst()
     end
-    
-    -- Testes
-    LG.setColor(black)
-    LG.print(botao, printx, printy)
 end
 
 function love.update(dt)
-    if not MenuPrincipal.ativado and not MenuJogo.ativado then
-        MenuPrincipal.ativado = true
+    if MenuJogo.ativado then
+        atualizarClock(dt)
+        for i, pergunta in ipairs(Perguntas.lista) do
+            pergunta.ativo = (Perguntas.index == i)
+        end
+        if MenuJogo.trAtivado then
+            MenuJogo.tmp = MenuJogo.tmp + dt
+            MenuJogo.trAtivado = MenuJogo.tmp < .7
+        else
+            MenuJogo.tmp = 0
+        end
+        tempoResposta = tempoResposta + dt
     end
 end
 
-function love.mousepressed(x, y, button, istouch)
-    if button == 1 then	
-        if MenuJogo.ativado then
-            -- Respostas
-            local titulo = "Pergunta " .. tostring(NumPergunta)
+function love.mousemoved(x, y)
+    if MenuPrincipal.ativado then
+        mousemovedMenuPrinc(x, y)
+    elseif MenuJogo.ativado then
+        mousemovedMenuJogo(x, y)
+    end
+end
 
-            -- Resp 1
-            if x >= MeioX-160 and x <= MeioX-10 and y >= MenuJogo.posY+Fonte:getHeight(titulo)+15+480 and y <= MenuJogo.posY+Fonte:getHeight(titulo)+15+480+50 then
-                NumPergunta = NumPergunta + 1
-            end
+function love.mousepressed(x, y) 
+    if MenuPrincipal.ativado then
+        mousepressedMenuPrinc(x, y)
+    elseif MenuJogo.ativado and not MenuJogo.trAtivado then
+        mousepressedMenuJogo(x, y)
+    end
+end
 
-            -- Resp 2
-            if x >= MeioX+10 and x <= MeioX+160 and y >= MenuJogo.posY+Fonte:getHeight(titulo)+15+480 and y <= MenuJogo.posY+Fonte:getHeight(titulo)+15+480+50 then
-                NumPergunta = NumPergunta + 1
-            end
+function love.keypressed(key)
+    if MenuPrincipal.ativado then 
+        keypressedMenuPrinc(key)
+    elseif MenuJogo.ativado and not MenuJogo.trAtivado then
+        keypressedMenuJogo(key)
+    elseif MenuInst.ativado or MenuVitoria.ativado then
+        keypressedMenuOp(key)
+    end
+end
 
-            -- Resp 3
-            if x >= MeioX-160 and x <= MeioX-10 and y >= MenuJogo.posY+Fonte:getHeight(titulo)+15+480+50+20 and y <= MenuJogo.posY+Fonte:getHeight(titulo)+15+480+50+20+50 then
-                NumPergunta = NumPergunta + 1
-            end
+function ativaMenuPrinc()
+    MenuPrincipal.ativado = true
+    MenuJogo.ativado = false
+    MenuVitoria.ativado = false
+    MenuInst.ativado = false
+end
 
-            -- Resp 4
-            if x >= MeioX+10 and x <= MeioX+160 and y >= MenuJogo.posY+Fonte:getHeight(titulo)+15+480+50+20 and y <= MenuJogo.posY+Fonte:getHeight(titulo)+15+480+50+20+50 then
-                NumPergunta = NumPergunta + 1
+function ativaMenuJogo()
+    MenuPrincipal.ativado = false
+    MenuJogo.ativado = true
+    MenuVitoria.ativado = false
+    MenuInst.ativado = false
+end
+
+function ativaMenuVitoria()
+    MenuPrincipal.ativado = false
+    MenuJogo.ativado = false
+    MenuVitoria.ativado = true
+    MenuInst.ativado = false
+end
+
+function ativaMenuInst()
+    MenuPrincipal.ativado = false
+    MenuJogo.ativado = false
+    MenuVitoria.ativado = false
+    MenuInst.ativado = true
+end
+
+function loadMenuPrinc()
+    MenuPrincipal.img = LG.newImage("src/MenuPrincFundo.png")
+    MenuPrincipal.img:setFilter("nearest", "nearest") 
+
+    MenuPrincipal.posX = MeioX - MenuPrincipal.img:getWidth() / 2
+    MenuPrincipal.posY = MeioY - MenuPrincipal.img:getHeight() / 2
+
+    btnInst = Botoes.Instrucao
+    btnInst.img = LG.newImage("src/btnInstrucao.png")
+    btnInst.posX = MeioX - btnInst.img:getWidth() / 2
+    btnInst.posY = MeioY + btnInst.img:getHeight() - margem
+
+    btnJogar = Botoes.Jogar
+    btnJogar.img = LG.newImage("src/btnJogar.png")
+    btnJogar.posX = MeioX - btnJogar.img:getWidth() / 2
+    btnJogar.posY = MeioY + btnJogar.img:getHeight() + margem * 2
+
+    btnSair = Botoes.Sair
+    btnSair.img = LG.newImage("src/btnSair.png")
+    btnSair.posX = MeioX - btnSair.img:getWidth() / 2
+    btnSair.posY = MeioY + btnSair.img:getHeight() + margem * 5
+end
+
+function loadMenuJogo()
+    MenuJogo.img = LG.newImage("src/MenuJogoFundo.png")
+    MenuJogo.tr = LG.newImage("src/MenuJogoFundo2.png")
+
+    MenuJogo.posX = MeioX - MenuJogo.img:getWidth() / 2
+    MenuJogo.posY = MeioY - MenuJogo.img:getHeight() / 2
+    Clock = Comp.Clock
+
+    Clock.img = LG.newImage("src/clock.png")
+    Clock.posX = 50
+    Clock.posY = 20
+
+    ClockNum = Comp.ClockNum
+    ClockNum.posX = 110
+    ClockNum.posY = 20
+    ClockNum.seg = Perguntas.lista[1].temp
+    ClockNum.text = "00:" .. ClockNum.seg
+
+    Perguntas.posX = 60
+    Perguntas.posY = 100
+
+    btnR1 = Botoes.R1
+    btnR2 = Botoes.R2
+    btnR3 = Botoes.R3
+    btnR4 = Botoes.R4
+
+    btnR1.img = LG.newImage("src/btnRA.png")
+    btnR2.img = LG.newImage("src/btnRB.png")
+    btnR3.img = LG.newImage("src/btnRC.png")
+    btnR4.img = LG.newImage("src/btnRD.png")
+
+    btnR1.posX = 90
+    btnR1.posY = 680
+
+    btnR2.posX = 710
+    btnR2.posY = 680
+
+    btnR3.posX = 90
+    btnR3.posY = 790
+
+    btnR4.posX = 710
+    btnR4.posY = 790
+end
+
+function loadMenuVitoria()
+    MenuVitoria.img = LG.newImage("src/MenuVitoriaFundo.png")
+    MenuVitoria.posX = MeioX - MenuVitoria.img:getWidth() / 2
+    MenuVitoria.posY = MeioY - MenuVitoria.img:getHeight() / 2
+end
+
+function loadMenuInst()
+    MenuInst.img = LG.newImage("src/MenuInstFundo.png")
+    MenuInst.posX = MeioX - MenuInst.img:getWidth() / 2
+    MenuInst.posY = MeioY - MenuInst.img:getHeight() / 2
+end
+
+function drawMenuPrinc()
+    LG.setColor(white)
+    --LG.print("" .. tostring(love.timer.getFPS()), 0,0)
+    LG.draw(MenuPrincipal.img, MenuPrincipal.posX, MenuPrincipal.posY)
+
+    LG.setColor(btnInst.color)
+    LG.draw(btnInst.img, btnInst.posX, btnInst.posY)
+
+    LG.setColor(btnJogar.color)
+    LG.draw(btnJogar.img, btnJogar.posX, btnJogar.posY)
+
+    LG.setColor(btnSair.color)
+    LG.draw(btnSair.img, btnSair.posX, btnSair.posY)
+end
+
+function drawMenuJogo()
+    LG.setColor(white)
+
+    if not MenuJogo.trAtivado then
+        LG.draw(MenuJogo.img, MenuJogo.posX, MenuJogo.posY)
+    else
+        LG.draw(MenuJogo.tr, MenuJogo.posX, MenuJogo.posY)
+    end
+
+    LG.draw(Clock.img, Clock.posX, Clock.posY)
+
+    LG.setFont(fonte48)
+
+    LG.setColor(Clock.color)
+    LG.print(ClockNum.text, ClockNum.posX, ClockNum.posY)
+
+    LG.setColor(black)
+
+    LG.setFont(fonte32)
+    if not MenuJogo.trAtivado then 
+        for i, pergunta in ipairs(Perguntas.lista) do
+            if pergunta.ativo then
+                LG.printf(pergunta.text, Perguntas.posX, Perguntas.posY, 1090)
+                break
             end
         end
-        if MenuPrincipal.ativado then
-            if not BtnDificuldade.ativado then
-                if x >= MeioX-BtnDificuldade.width/2-5 and x <= MeioX+BtnDificuldade.width/2+5 and y >= MenuPrincipal.posY+320-5 and y <= MenuPrincipal.posY+320+BtnDificuldade.height+5 then
-                    BtnDificuldade.ativado = true
-                end
+    end
+    
+    LG.setColor(btnR1.color)
+    LG.draw(btnR1.img, btnR1.posX, btnR1.posY)
 
-                -- Novo Jogo
-                if x >= MeioX-125 and x <= MeioX-125+250 and y >= MenuPrincipal.posY+400 and y <= MenuPrincipal.posY+400+65 then
-                    if BtnDificuldade.txt ~= "Selecione a dificuldade" then
-                        MenuPrincipal.ativado = false
-                        MenuJogo.ativado = true
-                    else
-                        MenuPrincipal.slcDif = true
-                    end
-                end
+    LG.setColor(btnR2.color)
+    LG.draw(btnR2.img, btnR2.posX, btnR2.posY)
 
-                -- Continuar
-                if x >= MeioX-125 and x <= MeioX-125+250 and y >= MenuPrincipal.posY+515 and y <= MenuPrincipal.posY+515+65 then
-                    printx = x
-                    printy = y
-                    botao = "Continuar"
-                end
+    LG.setColor(btnR3.color)
+    LG.draw(btnR3.img, btnR3.posX, btnR3.posY)
 
-                -- Sair
-                if x >= MeioX-125 and x <= MeioX-125+250 and y >= MenuPrincipal.posY+630 and y <= MenuPrincipal.posY+630+65 then
-                    love.event.quit()
-                end
-            else
-                if x >= MeioX-BtnDificuldade.width and x <= MeioX+BtnDificuldade.width and y >= MenuPrincipal.posY+320+BtnDificuldade.height+5 and y <= MenuPrincipal.posY+320+BtnDificuldade.height+100 then
-                    if x >= MeioX-BtnDificuldade.width and x <= MeioX+BtnDificuldade.width and y >= MenuPrincipal.posY+320+BtnDificuldade.height+10 and y <= MenuPrincipal.posY+320+BtnDificuldade.height+10+Fonte2:getHeight("Fácil")+10 then
-                        BtnDificuldade.txt = "Fácil"
-                        BtnDificuldade.ativado = false
-                        MenuPrincipal.slcDif = false
-                    end
-                    if x >= MeioX-BtnDificuldade.width and x <= MeioX+BtnDificuldade.width and y >= MenuPrincipal.posY+320+BtnDificuldade.height+45 and y <= MenuPrincipal.posY+320+BtnDificuldade.height+54+Fonte2:getHeight("Médio") then
-                        BtnDificuldade.txt = "Médio"
-                        BtnDificuldade.ativado = false
-                        MenuPrincipal.slcDif = false
-                    end
-                    if x >= MeioX-BtnDificuldade.width and x <= MeioX+BtnDificuldade.width and y >= MenuPrincipal.posY+320+BtnDificuldade.height+80 and y <= MenuPrincipal.posY+320+BtnDificuldade.height+80+Fonte2:getHeight("Difícil")+5 then
-                        BtnDificuldade.txt = "Difícil"
-                        BtnDificuldade.ativado = false
-                        MenuPrincipal.slcDif = false
-                    end
-                else
-                    if x >= MenuPrincipal.posX and y >= MenuPrincipal.posY then
-                        BtnDificuldade.ativado = false
-                    end
-                end
-            end
+    LG.setColor(btnR4.color)
+    LG.draw(btnR4.img, btnR4.posX, btnR4.posY)
+end
+
+function drawMenuVitoria()
+    LG.setColor(white)
+    LG.draw(MenuVitoria.img, MenuVitoria.posX, MenuVitoria.posY)
+
+    LG.setFont(fonte48n)
+    LG.setColor(black)
+    LG.print(pontuacao, Comp.pontuacao.posX, Comp.pontuacao.posY)
+    local segundos = math.floor(tempoResposta)
+
+    if segundos < 60 then
+        LG.print(segundos .. "s", Comp.tempoResposta.posX, Comp.tempoResposta.posY)
+    else
+        local minutos = math.floor(segundos / 60)
+        local restoSegundos = segundos % 60
+        LG.print(string.format("%dm %ds", minutos, restoSegundos), Comp.tempoResposta.posX, Comp.tempoResposta.posY)
+    end
+end
+
+function drawMenuInst()
+    LG.setColor(white)
+    LG.draw(MenuInst.img, MenuInst.posX, MenuInst.posY)
+end
+
+function atualizarClock(dt)
+    if ClockNum.seg > 0 then
+        ClockNum.seg = ClockNum.seg - 1 * dt
+        if ClockNum.seg < 6 then
+            Clock.color = red
+        elseif ClockNum.seg < (Perguntas.lista[Perguntas.index].temp - 11) then
+            Clock.color = black
+        end
+        if ClockNum.seg < 0 and Perguntas.index < #Perguntas.lista then
+            transicao()
+            trocarPergunta()
+        end
+    end
+    ClockNum.text = "00:" .. string.format("%02d", math.floor(ClockNum.seg))
+end
+
+function mousemovedMenuPrinc(x, y)
+    if x >= btnJogar.posX and x <= btnJogar.posX+btnJogar.img:getWidth() and y >= btnJogar.posY and y <= btnJogar.posY+btnJogar.img:getHeight() then
+        btnJogar.selected = true
+        btnJogar.color = white
+    elseif x >= btnInst.posX and x <= btnInst.posX+btnInst.img:getWidth() and y >= btnInst.posY and y <= btnInst.posY+btnInst.img:getHeight() then
+        btnInst.selected = true
+        btnInst.color = white
+    elseif x >= btnSair.posX and x <= btnSair.posX+btnSair.img:getWidth() and y >= btnSair.posY and y <= btnSair.posY+btnSair.img:getHeight() then
+        btnSair.selected = true
+        btnSair.color = white
+    else
+        btnSair.selected = false
+        btnJogar.selected = false
+        btnInst.selected = false
+        btnJogar.color = red
+        btnInst.color = red
+        btnSair.color = red
+    end
+end
+
+function mousemovedMenuJogo(x, y)
+    if x >= btnR1.posX and x <= btnR1.posX+btnR1.img:getWidth() and y >= btnR1.posY and y <= btnR1.posY+btnR1.img:getHeight() then
+        btnR1.selected = true
+        btnR1.color = gray
+    elseif x >= btnR2.posX and x <= btnR2.posX+btnR2.img:getWidth() and y >= btnR2.posY and y <= btnR2.posY+btnR2.img:getHeight() then
+        btnR2.selected = true
+        btnR2.color = gray
+    elseif x >= btnR3.posX and x <= btnR3.posX+btnR3.img:getWidth() and y >= btnR3.posY and y <= btnR3.posY+btnR3.img:getHeight() then
+        btnR3.selected = true
+        btnR3.color = gray
+    elseif x >= btnR4.posX and x <= btnR4.posX+btnR4.img:getWidth() and y >= btnR4.posY and y <= btnR4.posY+btnR4.img:getHeight() then
+        btnR4.selected = true
+        btnR4.color = gray
+    else
+        btnR1.selected = false
+        btnR2.selected = false
+        btnR3.selected = false
+        btnR4.selected = false
+        btnR4.color = white
+        btnR3.color = white
+        btnR2.color = white
+        btnR1.color = white
+    end
+end
+
+
+function mousepressedMenuPrinc()
+    if btnInst.selected then
+        ativaMenuInst()
+    elseif btnJogar.selected then
+        ativaMenuJogo()
+    elseif btnSair.selected or btnSair.selectedkey then
+        love.event.quit()
+    end
+end
+
+function mousepressedMenuJogo()
+    for i, pergunta in ipairs(Perguntas.lista) do
+        if pergunta.ativo then
+            if btnR1.selected then
+                transicao()
+                pontuar(pergunta.resp == 1)
+                trocarPergunta()
+            elseif btnR2.selected then
+                transicao()
+                pontuar(pergunta.resp == 2) 
+                trocarPergunta() 
+            elseif btnR3.selected then
+                transicao()
+                pontuar(pergunta.resp == 3)
+                trocarPergunta()
+            elseif btnR4.selected then 
+                transicao()
+                pontuar(pergunta.resp == 4)   
+                trocarPergunta()
+            end  
         end
     end
 end
 
-function love.keypressed(key, scancode, isrepeat)
+function keypressedMenuPrinc(key)
     if key == 'escape' then
-        if MenuPrincipal.ativado then
-            love.event.quit()
-        end 
-        if MenuJogo.ativado then
-            MenuJogo.ativado = false
-            MenuPrincipal.ativado = true
+        love.event.quit()
+    end
+end
+
+function keypressedMenuJogo(key)
+    if key == 'escape' then
+        ativaMenuPrinc()
+    end
+    for i, pergunta in ipairs(Perguntas.lista) do
+        if pergunta.ativo then
+            if key == '1' or key == 'kp1' or key == 'a' then
+                transicao()
+                pontuar(pergunta.resp == 1)
+                trocarPergunta()
+            elseif key == '2' or key == 'kp2' or key == 'b' then
+                transicao()
+                pontuar(pergunta.resp == 2) 
+                trocarPergunta() 
+            elseif key == '3' or key == 'kp3' or key == 'c' then
+                transicao()
+                pontuar(pergunta.resp == 3)
+                trocarPergunta()
+            elseif key == '4' or key == 'kp4' or key == 'd' then 
+                transicao()
+                pontuar(pergunta.resp == 4)   
+                trocarPergunta()
+            end  
+        end
+    end
+end
+
+function keypressedMenuOp(key)
+    if key == 'escape' then
+        if MenuVitoria.ativado then
+            tempoResposta = 0
+            pontuacao = 0
+            Perguntas.index = 0
+            trocarPergunta()
+        end
+        ativaMenuPrinc()
+    end
+end
+
+function pontuar(validador)
+    if validador then
+        for i, pergunta in ipairs(Perguntas.lista) do
+            if pergunta.ativo then
+                local tempoRestante = math.max(ClockNum.seg, 0)
+                local tempoLimite = pergunta.temp - 11
+                local pontosPorSegundo = 100 / pergunta.temp
+                local pontos = tempoRestante * pontosPorSegundo
+                if tempoRestante >= tempoLimite then
+                    pontuacao = pontuacao + 100
+                else
+                    pontuacao = pontuacao + math.floor(pontos)
+                end
+            end
+        end
+    end
+end
+
+function transicao()
+    MenuJogo.trAtivado = true
+end
+
+function trocarPergunta()
+    Perguntas.index = Perguntas.index + 1
+    for i, pergunta in ipairs(Perguntas.lista) do
+        if pergunta.ativo then
+            if Perguntas.index <= #Perguntas.lista then
+                ClockNum.seg = Perguntas.lista[Perguntas.index].temp
+                Clock.color = green
+            else
+                -- "Load do Menu Vitoria"
+                ativaMenuVitoria()
+                Comp.pontuacao.posX = 620 + fonte48n:getWidth(tostring(pontuacao)) / 2
+                Comp.pontuacao.posY = 410
+
+                local segundos = math.floor(tempoResposta)
+                local texto
+
+                if segundos < 60 then
+                    texto = tostring(segundos) .. "s"
+                    Comp.tempoResposta.posX = 540 - fonte48n:getWidth(texto) / 2
+                else
+                    local minutos = math.floor(segundos / 60)
+                    local restoSegundos = segundos % 60
+                    texto = string.format("%dm %ds", minutos, restoSegundos)
+                    Comp.tempoResposta.posX = 580 - fonte48n:getWidth(texto) / 2 
+                end
+                Comp.tempoResposta.posY = 601
+            end
+            break
         end
     end
 end
