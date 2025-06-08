@@ -120,6 +120,11 @@ function love.mousemoved(x, y)
         mousemovedMenuVitoria(x, y)
     elseif MenuErr.ativado then
         mousemovedMenuErr(x, y)
+    elseif MenuInst.ativado then
+        if x >= btnVoltar.posX and x <= btnVoltar.posX+btnVoltar.img:getWidth() and y >= btnVoltar.posY and y <= btnVoltar.posY+btnVoltar.img:getHeight() then
+            btnVoltar.selected = true
+            btnVoltar.color = gray
+        end
     end
 end
 
@@ -132,6 +137,10 @@ function love.mousepressed(x, y)
         mousepressedMenuVitoria(x, y)
     elseif MenuErr.ativado then
         mousepressedMenuErr(x, y)
+    elseif MenuInst.ativado then
+        if btnVoltar.selected then
+            ativaMenuPrinc()
+        end
     end
 end
 
@@ -384,6 +393,9 @@ end
 function drawMenuInst()
     LG.setColor(white)
     LG.draw(MenuInst.img, MenuInst.posX, MenuInst.posY)
+    
+    LG.setColor(btnVoltar.color)
+    LG.draw(btnVoltar.img, btnVoltar.posX, btnVoltar.posY)
 end
 
 function atualizarClock(dt)
@@ -464,9 +476,6 @@ function mousemovedMenuErr(x, y)
     if x >= btnProx.posX and x <= btnProx.posX+btnProx.img:getWidth() and y >= btnProx.posY and y <= btnProx.posY+btnProx.img:getHeight() then
         btnProx.selected = true
         btnProx.color = gray
-    elseif x >= btnVoltar.posX and x <= btnVoltar.posX+btnVoltar.img:getWidth() and y >= btnVoltar.posY and y <= btnVoltar.posY+btnVoltar.img:getHeight() then
-        btnVoltar.selected = true
-        btnVoltar.color = gray
     else
         btnProx.selected = false
         btnProx.color = white
