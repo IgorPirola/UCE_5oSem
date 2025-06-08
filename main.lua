@@ -19,13 +19,13 @@ MenuErr = {posX=0, posY=0, img=nil, ativado=false}
 Botoes = {
     Jogar = {posX=0, posY=0, img=nil, color=red, selected=false},
     Instrucao = {posX=0, posY=0, img=nil, color=red, selected=false},
-    Sair = {posX=0, posY=0, img=nil, color=red, selected=false},
     R1 = {posX=0, posY=0, img=nil, color=white, selected=false},
     R2 = {posX=0, posY=0, img=nil, color=white, selected=false},
     R3 = {posX=0, posY=0, img=nil, color=white, selected=false},
     R4 = {posX=0, posY=0, img=nil, color=white, selected=false},
     Erros = {posX=0, posY=0, img=nil, color=white, selected=false},
     Prox = {posX=0, posY=0, img=nil, color=white, selected=false},
+    Voltar = {posX=0, posY=0, img=nil, color=white, selected=false},
 }
 Comp = {
     Clock = {posX=0, posY=0, img=nil, color=green},
@@ -50,6 +50,11 @@ function love.load()
     fonte48 = LG.newFont(48)
     fonte48n = LG.newFont("src/Inter_18pt-Black.ttf", 48)
     fonte32 = LG.newFont(32)
+
+    btnVoltar = Botoes.Voltar
+    btnVoltar.img = LG.newImage("src/btnVoltar.png")
+    btnVoltar.posX = 990
+    btnVoltar.posY = 24
 
     loadMenuPrinc()
     loadMenuJogo()
@@ -131,9 +136,7 @@ function love.mousepressed(x, y)
 end
 
 function love.keypressed(key)
-    if MenuPrincipal.ativado then 
-        keypressedMenuPrinc(key)
-    elseif MenuJogo.ativado and not MenuJogo.trAtivado then
+    if MenuJogo.ativado and not MenuJogo.trAtivado then
         keypressedMenuJogo(key)
     elseif MenuInst.ativado or MenuVitoria.ativado then
         keypressedMenuOp(key)
@@ -201,11 +204,6 @@ function loadMenuPrinc()
     btnJogar.img = LG.newImage("src/btnJogar.png")
     btnJogar.posX = MeioX - btnJogar.img:getWidth() / 2
     btnJogar.posY = MeioY + btnJogar.img:getHeight() + margem * 2
-
-    btnSair = Botoes.Sair
-    btnSair.img = LG.newImage("src/btnSair.png")
-    btnSair.posX = MeioX - btnSair.img:getWidth() / 2
-    btnSair.posY = MeioY + btnSair.img:getHeight() + margem * 5
 end
 
 function loadMenuJogo()
@@ -290,19 +288,21 @@ function drawMenuPrinc()
 
     LG.setColor(btnJogar.color)
     LG.draw(btnJogar.img, btnJogar.posX, btnJogar.posY)
-
-    LG.setColor(btnSair.color)
-    LG.draw(btnSair.img, btnSair.posX, btnSair.posY)
 end
 
 function drawMenuJogo()
-    LG.setColor(white)
-
     if not MenuJogo.trAtivado then
+        LG.setColor(white)
         LG.draw(MenuJogo.img, MenuJogo.posX, MenuJogo.posY)
     else
+        LG.setColor(white)
         LG.draw(MenuJogo.tr, MenuJogo.posX, MenuJogo.posY)
     end
+
+    LG.setColor(btnVoltar.color)
+    LG.draw(btnVoltar.img, btnVoltar.posX, btnVoltar.posY)
+
+    LG.setColor(white)
 
     LG.draw(Clock.img, Clock.posX, Clock.posY)
 
@@ -339,6 +339,9 @@ end
 function drawMenuVitoria()
     LG.setColor(white)
     LG.draw(MenuVitoria.img, MenuVitoria.posX, MenuVitoria.posY)
+
+    LG.setColor(btnVoltar.color)
+    LG.draw(btnVoltar.img, btnVoltar.posX, btnVoltar.posY)
 
     LG.setFont(fonte48n)
     LG.setColor(black)
@@ -406,16 +409,11 @@ function mousemovedMenuPrinc(x, y)
     elseif x >= btnInst.posX and x <= btnInst.posX+btnInst.img:getWidth() and y >= btnInst.posY and y <= btnInst.posY+btnInst.img:getHeight() then
         btnInst.selected = true
         btnInst.color = white
-    elseif x >= btnSair.posX and x <= btnSair.posX+btnSair.img:getWidth() and y >= btnSair.posY and y <= btnSair.posY+btnSair.img:getHeight() then
-        btnSair.selected = true
-        btnSair.color = white
     else
-        btnSair.selected = false
         btnJogar.selected = false
         btnInst.selected = false
         btnJogar.color = red
         btnInst.color = red
-        btnSair.color = red
     end
 end
 
@@ -432,11 +430,16 @@ function mousemovedMenuJogo(x, y)
     elseif x >= btnR4.posX and x <= btnR4.posX+btnR4.img:getWidth() and y >= btnR4.posY and y <= btnR4.posY+btnR4.img:getHeight() then
         btnR4.selected = true
         btnR4.color = gray
+    elseif x >= btnVoltar.posX and x <= btnVoltar.posX+btnVoltar.img:getWidth() and y >= btnVoltar.posY and y <= btnVoltar.posY+btnVoltar.img:getHeight() then
+        btnVoltar.selected = true
+        btnVoltar.color = gray
     else
         btnR1.selected = false
         btnR2.selected = false
         btnR3.selected = false
         btnR4.selected = false
+        btnVoltar.selected = false
+        btnVoltar.color = white
         btnR4.color = white
         btnR3.color = white
         btnR2.color = white
@@ -448,6 +451,9 @@ function mousemovedMenuVitoria(x, y)
     if x >= btnErr.posX and x <= btnErr.posX+btnErr.img:getWidth() and y >= btnErr.posY and y <= btnErr.posY+btnErr.img:getHeight() then
         btnErr.selected = true
         btnErr.color = gray
+    elseif x >= btnVoltar.posX and x <= btnVoltar.posX+btnVoltar.img:getWidth() and y >= btnVoltar.posY and y <= btnVoltar.posY+btnVoltar.img:getHeight() then
+        btnVoltar.selected = true
+        btnVoltar.color = gray
     else
         btnErr.selected = false
         btnErr.color = white
@@ -458,6 +464,9 @@ function mousemovedMenuErr(x, y)
     if x >= btnProx.posX and x <= btnProx.posX+btnProx.img:getWidth() and y >= btnProx.posY and y <= btnProx.posY+btnProx.img:getHeight() then
         btnProx.selected = true
         btnProx.color = gray
+    elseif x >= btnVoltar.posX and x <= btnVoltar.posX+btnVoltar.img:getWidth() and y >= btnVoltar.posY and y <= btnVoltar.posY+btnVoltar.img:getHeight() then
+        btnVoltar.selected = true
+        btnVoltar.color = gray
     else
         btnProx.selected = false
         btnProx.color = white
@@ -470,8 +479,6 @@ function mousepressedMenuPrinc()
         ativaMenuInst()
     elseif btnJogar.selected then
         ativaMenuJogo()
-    elseif btnSair.selected or btnSair.selectedkey then
-        love.event.quit()
     end
 end
 
@@ -498,6 +505,8 @@ function mousepressedMenuJogo()
                 transicao()
                 pontuar(pergunta.resp == 4)   
                 trocarPergunta()
+            elseif btnVoltar.selected then
+                ativaMenuPrinc()
             end  
         end
     end
@@ -506,6 +515,12 @@ end
 function mousepressedMenuVitoria(x, y)
     if btnErr.selected then
         ativaMenuErr()
+    elseif btnVoltar.selected then
+        tempoResposta = 0
+        pontuacao = 0
+        Perguntas.index = 0
+        trocarPergunta()
+        ativaMenuPrinc()
     end
 end
 
@@ -530,12 +545,6 @@ function mousepressedMenuErr(x, y)
             trocarPergunta()
             ativaMenuPrinc()
         end
-    end
-end
-
-function keypressedMenuPrinc(key)
-    if key == 'escape' then
-        love.event.quit()
     end
 end
 
