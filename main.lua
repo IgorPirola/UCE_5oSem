@@ -124,6 +124,9 @@ function love.mousemoved(x, y)
         if x >= btnVoltar.posX and x <= btnVoltar.posX+btnVoltar.img:getWidth() and y >= btnVoltar.posY and y <= btnVoltar.posY+btnVoltar.img:getHeight() then
             btnVoltar.selected = true
             btnVoltar.color = gray
+        else
+            btnVoltar.selected = false
+            btnVoltar.color = white
         end
     end
 end
