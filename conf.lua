@@ -6,6 +6,7 @@ function love.conf(t)
   t.modules.graphics = true
   t.window.opengl = true
   t.gammacorrect = false
+  t.console = false
 
   t.window.highdpi = false
   t.window.msaa = 0

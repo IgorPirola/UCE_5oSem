@@ -14,6 +14,8 @@ MenuPrincipal = {posX=0, posY=0, img=nil, ativado=true}
 MenuJogo = {posX=0, posY=0, img=nil, tr=nil, ativado=false, trAtivado=false, tmp=0}
 MenuVitoria = {posX=0, posY=0, img=nil, ativado=false}
 MenuInst = {posX=0, posY=0, img=nil, ativado=false}
+MenuErr = {posX=0, posY=0, img=nil, ativado=false}
+
 Botoes = {
     Jogar = {posX=0, posY=0, img=nil, color=red, selected=false},
     Instrucao = {posX=0, posY=0, img=nil, color=red, selected=false},
@@ -21,19 +23,23 @@ Botoes = {
     R1 = {posX=0, posY=0, img=nil, color=white, selected=false},
     R2 = {posX=0, posY=0, img=nil, color=white, selected=false},
     R3 = {posX=0, posY=0, img=nil, color=white, selected=false},
-    R4 = {posX=0, posY=0, img=nil, color=white, selected=false}
+    R4 = {posX=0, posY=0, img=nil, color=white, selected=false},
+    Erros = {posX=0, posY=0, img=nil, color=white, selected=false},
+    Prox = {posX=0, posY=0, img=nil, color=white, selected=false},
 }
 Comp = {
     Clock = {posX=0, posY=0, img=nil, color=green},
     ClockNum = {posX=0, posY=0, text="", seg=0},
     pontuacao = {posX=0, posY=0},
-    tempoResposta = {posX=0, posY=0}
+    tempoResposta = {posX=0, posY=0},
+    confete = {posX=0, posY=0, img=nil, ativado=false}
 }
 pontuacao = 0
 tempoResposta = 0
 imagemPerg = {
     p1=nil
 }
+indexProx = 1
 
 margem = 40
 
@@ -49,6 +55,9 @@ function love.load()
     loadMenuJogo()
     loadMenuVitoria()
     loadMenuInst()
+    loadMenuErr()
+
+    -- testes
 end
 
 function love.draw()
@@ -60,6 +69,8 @@ function love.draw()
         drawMenuVitoria()
     elseif MenuInst.ativado then
         drawMenuInst()
+    elseif MenuErr.ativado then
+        drawMenuErr()
     end
 end
 
@@ -76,6 +87,22 @@ function love.update(dt)
             MenuJogo.tmp = 0
         end
         tempoResposta = tempoResposta + dt
+    elseif MenuErr.ativado then 
+        for i, pergunta in ipairs(Perguntas.lista) do
+            if (Perguntas.index == i) and (pergunta.selec ~= 0) and (pergunta.selec ~= pergunta.resp) then
+                pergunta.ativo = true
+                break
+            else
+                pergunta.ativo = false
+            end
+        end
+        if Perguntas.index > #Perguntas.lista then
+            tempoResposta = 0
+            pontuacao = 0
+            Perguntas.index = 0
+            trocarPergunta()
+            ativaMenuPrinc()
+        end
     end
 end
 
@@ -84,6 +111,10 @@ function love.mousemoved(x, y)
         mousemovedMenuPrinc(x, y)
     elseif MenuJogo.ativado then
         mousemovedMenuJogo(x, y)
+    elseif MenuVitoria.ativado then
+        mousemovedMenuVitoria(x, y)
+    elseif MenuErr.ativado then
+        mousemovedMenuErr(x, y)
     end
 end
 
@@ -92,6 +123,10 @@ function love.mousepressed(x, y)
         mousepressedMenuPrinc(x, y)
     elseif MenuJogo.ativado and not MenuJogo.trAtivado then
         mousepressedMenuJogo(x, y)
+    elseif MenuVitoria.ativado then
+        mousepressedMenuVitoria(x, y)
+    elseif MenuErr.ativado then
+        mousepressedMenuErr(x, y)
     end
 end
 
@@ -102,6 +137,8 @@ function love.keypressed(key)
         keypressedMenuJogo(key)
     elseif MenuInst.ativado or MenuVitoria.ativado then
         keypressedMenuOp(key)
+    elseif MenuErr.ativado then
+        keypressedMenuErr(key)
     end
 end
 
@@ -117,6 +154,7 @@ function ativaMenuJogo()
     MenuJogo.ativado = true
     MenuVitoria.ativado = false
     MenuInst.ativado = false
+    MenuErr.ativado = false
 end
 
 function ativaMenuVitoria()
@@ -124,6 +162,7 @@ function ativaMenuVitoria()
     MenuJogo.ativado = false
     MenuVitoria.ativado = true
     MenuInst.ativado = false
+    MenuErr.ativado = false
 end
 
 function ativaMenuInst()
@@ -131,6 +170,19 @@ function ativaMenuInst()
     MenuJogo.ativado = false
     MenuVitoria.ativado = false
     MenuInst.ativado = true
+    MenuErr.ativado = false
+end
+
+function ativaMenuErr()
+    Perguntas.index = 1
+    while Perguntas.index <= #Perguntas.lista and Perguntas.lista[Perguntas.index].selec ~= 0 and Perguntas.lista[Perguntas.index].selec == Perguntas.lista[Perguntas.index].resp do
+        Perguntas.index = Perguntas.index + 1
+    end
+    MenuPrincipal.ativado = false
+    MenuJogo.ativado = false
+    MenuVitoria.ativado = false
+    MenuInst.ativado = false
+    MenuErr.ativado = true
 end
 
 function loadMenuPrinc()
@@ -204,6 +256,22 @@ function loadMenuVitoria()
     MenuVitoria.img = LG.newImage("src/MenuVitoriaFundo.png")
     MenuVitoria.posX = MeioX - MenuVitoria.img:getWidth() / 2
     MenuVitoria.posY = MeioY - MenuVitoria.img:getHeight() / 2
+
+    btnErr = Botoes.Erros
+    btnErr.img = LG.newImage("src/btnErros.png")
+    btnErr.posX = 167
+    btnErr.posY = 772
+end
+
+function loadMenuErr()
+    MenuErr.img = LG.newImage("src/MenuErrFundo.png")
+    MenuErr.posX = MenuJogo.posX
+    MenuErr.posY = MenuJogo.posY
+
+    btnProx = Botoes.Prox
+    btnProx.img = LG.newImage("src/btnProx.png")
+    btnProx.posX = 400
+    btnProx.posY = 745
 end
 
 function loadMenuInst()
@@ -275,7 +343,9 @@ function drawMenuVitoria()
     LG.setFont(fonte48n)
     LG.setColor(black)
     LG.print(pontuacao, Comp.pontuacao.posX, Comp.pontuacao.posY)
+
     local segundos = math.floor(tempoResposta)
+    
 
     if segundos < 60 then
         LG.print(segundos .. "s", Comp.tempoResposta.posX, Comp.tempoResposta.posY)
@@ -283,6 +353,28 @@ function drawMenuVitoria()
         local minutos = math.floor(segundos / 60)
         local restoSegundos = segundos % 60
         LG.print(string.format("%dm %ds", minutos, restoSegundos), Comp.tempoResposta.posX, Comp.tempoResposta.posY)
+    end
+
+    LG.setColor(btnErr.color)
+    LG.draw(btnErr.img, btnErr.posX, btnErr.posY)
+end
+
+function drawMenuErr()
+    LG.setColor(white)
+    LG.draw(MenuErr.img, MenuErr.posX, MenuErr.posY)
+
+    LG.setColor(btnProx.color)
+    LG.draw(btnProx.img, btnProx.posX, btnProx.posY)
+
+    LG.setFont(fonte32)
+    LG.setColor(black)
+    for i, pergunta in ipairs(Perguntas.lista) do
+        if pergunta.ativo then
+            LG.printf(pergunta.text, Perguntas.posX, Perguntas.posY, 1090)
+            LG.setColor(green)
+            LG.printf(pergunta.respTxt, Perguntas.posX, 610, 1090)
+            break
+        end
     end
 end
 
@@ -352,6 +444,26 @@ function mousemovedMenuJogo(x, y)
     end
 end
 
+function mousemovedMenuVitoria(x, y)
+    if x >= btnErr.posX and x <= btnErr.posX+btnErr.img:getWidth() and y >= btnErr.posY and y <= btnErr.posY+btnErr.img:getHeight() then
+        btnErr.selected = true
+        btnErr.color = gray
+    else
+        btnErr.selected = false
+        btnErr.color = white
+    end
+end
+
+function mousemovedMenuErr(x, y)
+    if x >= btnProx.posX and x <= btnProx.posX+btnProx.img:getWidth() and y >= btnProx.posY and y <= btnProx.posY+btnProx.img:getHeight() then
+        btnProx.selected = true
+        btnProx.color = gray
+    else
+        btnProx.selected = false
+        btnProx.color = white
+    end
+end
+
 
 function mousepressedMenuPrinc()
     if btnInst.selected then
@@ -367,22 +479,56 @@ function mousepressedMenuJogo()
     for i, pergunta in ipairs(Perguntas.lista) do
         if pergunta.ativo then
             if btnR1.selected then
+                pergunta.selec = 1
                 transicao()
                 pontuar(pergunta.resp == 1)
                 trocarPergunta()
             elseif btnR2.selected then
+                pergunta.selec = 2
                 transicao()
                 pontuar(pergunta.resp == 2) 
                 trocarPergunta() 
             elseif btnR3.selected then
+                pergunta.selec = 3
                 transicao()
                 pontuar(pergunta.resp == 3)
                 trocarPergunta()
             elseif btnR4.selected then 
+                pergunta.selec = 4
                 transicao()
                 pontuar(pergunta.resp == 4)   
                 trocarPergunta()
             end  
+        end
+    end
+end
+
+function mousepressedMenuVitoria(x, y)
+    if btnErr.selected then
+        ativaMenuErr()
+    end
+end
+
+function mousepressedMenuErr(x, y)
+    if btnProx.selected then
+        if Perguntas.index <= #Perguntas.lista then
+            Perguntas.index = Perguntas.index + 1
+            while Perguntas.index <= #Perguntas.lista and Perguntas.lista[Perguntas.index].selec ~= 0 and Perguntas.lista[Perguntas.index].selec == Perguntas.lista[Perguntas.index].resp do
+                Perguntas.index = Perguntas.index + 1
+                if Perguntas.index >= #Perguntas.lista then
+                    tempoResposta = 0
+                    pontuacao = 0
+                    Perguntas.index = 0
+                    trocarPergunta()
+                    ativaMenuPrinc()
+                end
+            end
+        elseif Perguntas.index >= #Perguntas.lista then
+            tempoResposta = 0
+            pontuacao = 0
+            Perguntas.index = 0
+            trocarPergunta()
+            ativaMenuPrinc()
         end
     end
 end
@@ -400,18 +546,22 @@ function keypressedMenuJogo(key)
     for i, pergunta in ipairs(Perguntas.lista) do
         if pergunta.ativo then
             if key == '1' or key == 'kp1' or key == 'a' then
+                pergunta.selec = 1
                 transicao()
                 pontuar(pergunta.resp == 1)
                 trocarPergunta()
             elseif key == '2' or key == 'kp2' or key == 'b' then
+                pergunta.selec = 2
                 transicao()
                 pontuar(pergunta.resp == 2) 
                 trocarPergunta() 
             elseif key == '3' or key == 'kp3' or key == 'c' then
+                pergunta.selec = 3
                 transicao()
                 pontuar(pergunta.resp == 3)
                 trocarPergunta()
             elseif key == '4' or key == 'kp4' or key == 'd' then 
+                pergunta.selec = 4
                 transicao()
                 pontuar(pergunta.resp == 4)   
                 trocarPergunta()
@@ -429,6 +579,30 @@ function keypressedMenuOp(key)
             trocarPergunta()
         end
         ativaMenuPrinc()
+    end
+end
+
+function keypressedMenuErr(key)
+    if key == 'return' or key == 'kpenter' then
+        if Perguntas.index <= #Perguntas.lista then
+            Perguntas.index = Perguntas.index + 1
+            while Perguntas.index <= #Perguntas.lista and Perguntas.lista[Perguntas.index].selec ~= 0 and Perguntas.lista[Perguntas.index].selec == Perguntas.lista[Perguntas.index].resp do
+                Perguntas.index = Perguntas.index + 1
+                if Perguntas.index >= #Perguntas.lista then
+                    tempoResposta = 0
+                    pontuacao = 0
+                    Perguntas.index = 0
+                    trocarPergunta()
+                    ativaMenuPrinc()
+                end
+            end
+        elseif Perguntas.index >= #Perguntas.lista then
+            tempoResposta = 0
+            pontuacao = 0
+            Perguntas.index = 0
+            trocarPergunta()
+            ativaMenuPrinc()
+        end
     end
 end
 
@@ -464,8 +638,8 @@ function trocarPergunta()
             else
                 -- "Load do Menu Vitoria"
                 ativaMenuVitoria()
-                Comp.pontuacao.posX = 620 + fonte48n:getWidth(tostring(pontuacao)) / 2
-                Comp.pontuacao.posY = 410
+                Comp.pontuacao.posX = 600 + fonte48n:getWidth(tostring(pontuacao)) / 2
+                Comp.pontuacao.posY = 381
 
                 local segundos = math.floor(tempoResposta)
                 local texto
@@ -479,7 +653,7 @@ function trocarPergunta()
                     texto = string.format("%dm %ds", minutos, restoSegundos)
                     Comp.tempoResposta.posX = 580 - fonte48n:getWidth(texto) / 2 
                 end
-                Comp.tempoResposta.posY = 601
+                Comp.tempoResposta.posY = 547
             end
             break
         end
